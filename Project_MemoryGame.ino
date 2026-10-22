@@ -112,8 +112,6 @@ void publishScore(int score) {
   } else {
     Serial.println("MQTT publish failed.");
   }
-
-  Serial.println("--------------------");
 }
 
 
@@ -161,7 +159,6 @@ void showStartScreen() {
 
 void waitForStart() {
   while (true) {
-    // [NEW] Keep MQTT alive
     maintainMQTT();
 
     for (int i = 0; i < 4; i++) {
@@ -206,7 +203,6 @@ void showSequence() {
     showColor(sequence[i]);
     delay(250);
 
-    // [NEW] Keep MQTT alive
     maintainMQTT();
   }
 }
@@ -216,10 +212,8 @@ void showProgress(int correctCount) {
   lcd.print("Level ");
   lcd.print(level);
   lcd.print("          ");
-
   lcd.setCursor(0, 1);
   lcd.print("                ");
-
   lcd.setCursor(0, 1);
   lcd.print(correctCount);
   lcd.print("/");
@@ -229,20 +223,17 @@ void showProgress(int correctCount) {
 int waitForButton() {
   while (true) {
     maintainMQTT();
-
     for (int i = 0; i < 4; i++) {
       if (digitalRead(buttonPins[i]) == LOW) {
         delay(30);
-
         if (digitalRead(buttonPins[i]) != LOW) {
           continue;
         }
-
+        
         while (digitalRead(buttonPins[i]) == LOW) {
           maintainMQTT();
           delay(10);
         }
-
         delay(30);
         return i;
       }
@@ -253,46 +244,34 @@ int waitForButton() {
 void correctPress(int color) {
   digitalWrite(ledPins[color], HIGH);
   buzzerOn();
-
   delay(180);
-
   buzzerOff();
   digitalWrite(ledPins[color], LOW);
-
   delay(150);
 }
 
 void wrongAnswer() {
   buzzerOff();
-
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("That Wrong");
-
   for (int j = 0; j < 3; j++) {
     for (int i = 0; i < 4; i++) {
       digitalWrite(ledPins[i], HIGH);
     }
-
     if (j < 3) {
       buzzerOn();
     }
-
     delay(250);
-
     allLedsOff();
     buzzerOff();
     delay(250);
   }
 
-  // Original highest level logic
   if (level > highestLevel) {
     highestLevel = level;
   }
-
-  // Show score
   lcd.clear();
-
   lcd.setCursor(0, 0);
   lcd.print("Highest: ");
   lcd.print(highestLevel);
@@ -302,9 +281,7 @@ void wrongAnswer() {
   lcd.print(level - 1);
 
   scoreSound();
-
   publishScore(level - 1);
-
   delay(3000);
 }
 
@@ -315,18 +292,14 @@ void resetGame() {
 
 void setup() {
   Serial.begin(115200);
-
   digitalWrite(buzzerPin, HIGH);
   pinMode(buzzerPin, OUTPUT);
   buzzerOff();
-
   for (int i = 0; i < 4; i++) {
     pinMode(ledPins[i], OUTPUT);
     pinMode(buttonPins[i], INPUT_PULLUP);
   }
-
   allLedsOff();
-
   randomSeed(analogRead(A0));
 
   lcd.init();
